@@ -92,9 +92,11 @@ class RightsStatement(models.Model):
         statements_by_type = {}
         merged_statements = []
         for statement in statement_list:
-            if not statement.rights_basis.lower() in statements_by_type:
-                statements_by_type[statement.rights_basis.lower()] = []
-            statements_by_type[statement.rights_basis.lower()].append(statement)
+            statement_group_key = statement.rights_basis.lower()
+            if statement_group_key not in statements_by_type:
+                statements_by_type[statement_group_key] = []
+            statements_by_type[statement_group_key].append(statement)
+
         for statement_group in statements_by_type:
             merged_statement = statements_by_type[statement_group][0]
             merged_rights_info = merged_statement.get_rights_info_object()
@@ -109,22 +111,11 @@ class RightsStatement(models.Model):
                     rights_info_to_merge.append(statement.get_rights_info_object())
                     rights_granted_objects = statement.get_rights_granted_objects()
                     for rights_granted in rights_granted_objects:
-                        if (
-                            not "{}{}".format(
-                                rights_granted.act, rights_granted.restriction
-                            )
-                            in rights_granted_groups
-                        ):
-                            rights_granted_groups[
-                                "{}{}".format(
-                                    rights_granted.act, rights_granted.restriction
-                                )
-                            ] = []
-                        rights_granted_groups[
-                            "{}{}".format(
-                                rights_granted.act, rights_granted.restriction
-                            )
-                        ].append(rights_granted)
+                        rights_granted_group = "{}{}".format(rights_granted.act, rights_granted.restriction)
+
+                        if rights_granted_group not in rights_granted_groups:
+                            rights_granted_groups[rights_granted_group] = []
+                        rights_granted_groups[rights_granted_group].append(rights_granted)
 
                 date_keys = merged_statement.get_date_keys()
                 merge_dates(rights_info_to_merge, date_keys, merged_rights_info)
